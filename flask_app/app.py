@@ -15,7 +15,7 @@ def run_faas_request():
     # ref xspdf.com/resolution/50942456.html
     process = subprocess.Popen(['export', 'OPENFAAS_URL=https://faasd.cthulu.tk', '&&', 'echo', '|', 'faas-cli', 'invoke', function], stdout=subprocess.PIPE)
     stdout = process.communicate()[0]
-    return 'STDOUT:{}'.format(stdout)
+    return stdout
 
 
 @server.route('/', methods=['GET', 'POST'])
