@@ -1,6 +1,11 @@
 from flask import Flask
 from flask import request, jsonify
 from random import sample
+from subprocess import Popen, PIPE, check_output
+import shlex
+import collections
+import threading
+import time
 import subprocess
 
 server = Flask(__name__)
@@ -10,13 +15,14 @@ def run_request():
     list = ['red', 'green', 'blue', 'yellow', 'black']
     return list[index]
 
-def run_faas_request():
-    function = request.json['function']
-    # ref xspdf.com/resolution/50942456.html
-    process = subprocess.Popen(['export', 'OPENFAAS_URL=https://faasd.cthulu.tk', '&&', 'echo', '|', 'faas-cli', 'invoke', function], stdout=subprocess.PIPE)
-    stdout = process.communicate()[0]
-    return stdout
+def read_output(process, append):
+    for line in iter(process.stdout.readline, ""):
+        append(line)
 
+def run_faas_request():
+    functionName = request.json['function'] # eg catapi
+    stdout = subprocess.check_output(["./test.sh", functionName])
+    return stdout.decode('UTF-8').rstrip().replace("'", "\"")
 
 @server.route('/', methods=['GET', 'POST'])
 def hello_world():
