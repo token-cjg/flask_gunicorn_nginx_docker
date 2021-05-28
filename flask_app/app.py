@@ -10,30 +10,28 @@ import subprocess
 
 server = Flask(__name__)
 
-def run_request():
-    index = int(request.json['index'])
-    list = ['red', 'green', 'blue', 'yellow', 'black']
-    return list[index]
-
-def read_output(process, append):
-    for line in iter(process.stdout.readline, ""):
-        append(line)
-
-def run_faas_request():
+def run_publish_request():
     functionName = request.json['function'] # eg catapi
-    stdout = subprocess.check_output(["./test.sh", functionName])
+    appId = request.json['app_id'] # eg 123
+    resolvedFunctionName = appId + functionName # eg 123catapi
+    stdout = subprocess.check_output(["./publish.sh", resolvedFunctionName])
     return stdout.decode('UTF-8').rstrip().replace("'", "\"")
 
-@server.route('/', methods=['GET', 'POST'])
-def hello_world():
-    if request.method == 'GET':
-        return 'The model is up and running. Send a POST request'
-    else:
-        return run_request()
+def run_invoke_request():
+    functionName = request.json['function'] # eg catapi
+    stdout = subprocess.check_output(["./invoke.sh", functionName])
+    return stdout.decode('UTF-8').rstrip().replace("'", "\"")
 
-@server.route('/faas', methods=['GET', 'POST'])
-def make_faas_request():
+@server.route('/publish', methods=['GET', 'POST'])
+def make_faas_publish_request():
     if request.method == 'GET':
-        return 'This is the faas route.  Send a POST request with json payload of the form { function: catapi }.'
+        return 'This is the faas publish route. Send a POST request with json payload of the form { app_id: 123, function: catapi } in order to have your function published as 123catapi.'
+    else:
+        return run_publish_request()
+
+@server.route('/invoke', methods=['GET', 'POST'])
+def make_faas_invoke_request():
+    if request.method == 'GET':
+        return 'This is the faas invoke route. Send a POST request with json payload of the form { function: catapi }.'
     if request.method == 'POST':
-        return run_faas_request()
+        return run_invoke_request()
