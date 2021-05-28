@@ -13,6 +13,7 @@ server = Flask(__name__)
 def run_publish_request():
     functionName = request.json['function'] # eg catapi
     appId = request.json['app_id'] # eg 123
+    path = request.json['path'] # eg s3.amazon.com/mycoolbucket/mycoolfunctioncode.py
     resolvedFunctionName = appId + functionName # eg 123catapi
     stdout = subprocess.check_output(["./publish.sh", resolvedFunctionName])
     return stdout.decode('UTF-8').rstrip().replace("'", "\"")
@@ -25,7 +26,14 @@ def run_invoke_request():
 @server.route('/publish', methods=['GET', 'POST'])
 def make_faas_publish_request():
     if request.method == 'GET':
-        return 'This is the faas publish route. Send a POST request with json payload of the form { app_id: 123, function: catapi } in order to have your function published as 123catapi.'
+        return 'This is the faas publish route. Send a POST request with json payload of the form \
+            { \
+                app_id: 123, \
+                function: catapi, \
+                path: path_to_catapi_code_in_s3_bucket \
+            } \
+            in order to have your function with code in S3 path path_to_catapi_code_in_s3_bucket \
+            published on the OpenFaaS server as 123catapi.'
     else:
         return run_publish_request()
 
